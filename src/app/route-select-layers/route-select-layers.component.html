@@ -1,0 +1,55 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav class="sidenav" mode="side" [(opened)]="opened">
+    <mat-form-field>
+      <mat-label>Select a Category</mat-label>
+      <mat-select [(value)]="selectedCategory">
+        <mat-option>None</mat-option>
+        <mat-option value="baseball">Baseball</mat-option>
+        <mat-option value="historicPlaces">Historic Places</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field *ngIf="selectedCategory == 'baseball'">
+      <mat-label>Select a Layer</mat-label>
+      <mat-select [(value)]="selectedLayer">
+        <mat-option>None</mat-option>
+        <mat-option value="stadiums">Baseball Stadiums</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field *ngIf="selectedCategory == 'historicPlaces'">
+      <mat-label>Select a Layer</mat-label>
+      <mat-select [(value)]="selectedLayer">
+        <mat-option>None</mat-option>
+        <mat-option value="historicPoints">Historic Points</mat-option>
+        <mat-option value="historicAreas">Historic Areas</mat-option>
+      </mat-select>
+    </mat-form-field>
+    Year
+    <ul style="list-style-type:none;">
+      <li>
+        <mat-checkbox id="year1500s" [(value)]="selectedCheckbox" (change)="onYearChange($event, '1500')"> 1500 to 1599 </mat-checkbox>
+      </li>
+      <li>
+        <mat-checkbox id="year1600s" [(value)]="selectedCheckbox" (change)="onYearChange($event, '1600')"> 1600 to 1699</mat-checkbox>
+      </li>
+    </ul>
+
+    Significant Level
+    <ul style="list-style-type:none;">
+      <li>
+        <mat-checkbox id="highLevel" [(value)]="high" (change)="onSigLevelChange($event, 'High')"> High </mat-checkbox>
+      </li>
+      <li>
+        <mat-checkbox id="medLevel" [(value)]="medium" (change)="onSigLevelChange($event, 'Medium')"> Medium</mat-checkbox>
+      </li>
+    </ul>
+    <button>Submit</button>
+    
+  </mat-sidenav>
+
+  <mat-sidenav-content class="sidenav-content">
+    <button mat-raised-button *ngIf="opened" (click)="sidenav.toggle()">Close Layer Selection</button>
+    <button mat-raised-button *ngIf="!opened" (click)="sidenav.toggle()">Open Layer Selection</button>
+    {{selectedLayer}}
+    <app-map [featureLayerUrl]="featureLayerUrl"></app-map>
+  </mat-sidenav-content>
+</mat-sidenav-container>
