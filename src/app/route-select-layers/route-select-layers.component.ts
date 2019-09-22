@@ -133,7 +133,7 @@ export class RouteSelectLayersComponent implements OnInit, OnChanges {
       {
         this.featureLayerUrl = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/MapServer/0';
       }
-      if(this.sigLevel.indexOf('Medium') > 1)
+      if(this.sigLevel.indexOf('Medium') > -1)
       {
         this.featureLayerUrl = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/WorldTimeZones/MapServer/0';
       }
