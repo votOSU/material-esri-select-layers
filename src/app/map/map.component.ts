@@ -7,7 +7,10 @@ import esri = __esri;
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss']
 })
+
 export class MapComponent implements OnInit, OnChanges {
+
+  public featureInfo: string;
 
   esriLoaderOptions: object = {};
   mapView: esri.MapView;
@@ -81,22 +84,48 @@ export class MapComponent implements OnInit, OnChanges {
       });
   }
 
-  changeMapLayer() {
+  changeMapLayer()
+  {
     loadModules([
       'esri/layers/FeatureLayer'
     ], this.esriLoaderOptions)
       .then(([
         FeatureLayer
       ]) => {
-        if (this.featureLayerUrl) {
-          const featureLayer = new FeatureLayer({
-            url: this.featureLayerUrl
-          });
+        if (this.featureLayerUrl)
+        {
+            const featureLayer = new FeatureLayer({
+              url: this.featureLayerUrl,
+              outFields: ["*"]
+            });
           //this.mapView.map.basemap.baseLayers.forEach((baseLayer) => {
             //baseLayer.visible = false;
           //})
-          this.mapView.map.removeAll();
-          this.mapView.map.add(featureLayer);
+            
+            this.mapView.map.removeAll();
+            this.mapView.map.add(featureLayer);
+            
+
+            this.mapView.on("click", function (event)
+            {
+              var clickedPoint = {
+                x: event.x,
+                y: event.y
+              };
+              this.mapView.hitTest(clickedPoint).then(function (response)
+              {
+                console.log("RESPONSE " + response);
+                var feature = response.results.filter(function (result) {
+                  return result.graphic.layer === featureLayer;
+                })[0].graphic;
+                if (feature)
+                {
+                  this.featureInfo = feature.attributes.objectid; 
+                  this.printInfo();
+                }
+              })
+            });
+
         } else {
           if (this.mapView && this.mapView.map) {
             this.mapView.map.removeAll();
@@ -106,6 +135,11 @@ export class MapComponent implements OnInit, OnChanges {
       .catch(err => {
         console.error(err);
       });
+  }
+
+  printInfo() {
+    alert("From Click: " + this.featureInfo);
+    console.log("From Click " + this.featureInfo);
   }
 
 }
