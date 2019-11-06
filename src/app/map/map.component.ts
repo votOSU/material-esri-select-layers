@@ -10,7 +10,11 @@ import esri = __esri;
 
 export class MapComponent implements OnInit, OnChanges {
 
-  public featureInfo: string;
+    public featureInfo: string;
+    public selectedName: string;
+    public testingInfo: string;
+
+    @Output() public infoToSend = new EventEmitter<string>(); 
 
   esriLoaderOptions: object = {};
   mapView: esri.MapView;
@@ -42,9 +46,7 @@ export class MapComponent implements OnInit, OnChanges {
         WebMap
       ]) => {
         this.webMapProperties = {
-          portalItem: {
-            id: this.webMapPortalId
-          }
+            basemap: "gray-vector"
         };
         this.webMap = new WebMap(this.webMapProperties);
       });
@@ -68,7 +70,7 @@ export class MapComponent implements OnInit, OnChanges {
         this.mapViewProperties = {
           container: this.mapViewNodeElementRef.nativeElement,
           center:[-94, 37],
-          zoom: 4,
+          zoom: 5,
           map: this.webMap
         };
         this.mapView = new MapView(this.mapViewProperties);
@@ -101,31 +103,10 @@ export class MapComponent implements OnInit, OnChanges {
           //this.mapView.map.basemap.baseLayers.forEach((baseLayer) => {
             //baseLayer.visible = false;
           //})
-            
             this.mapView.map.removeAll();
             this.mapView.map.add(featureLayer);
+            this.queryObject1(featureLayer);
             
-
-            this.mapView.on("click", function (event)
-            {
-              var clickedPoint = {
-                x: event.x,
-                y: event.y
-              };
-              this.mapView.hitTest(clickedPoint).then(function (response)
-              {
-                console.log("RESPONSE " + response);
-                var feature = response.results.filter(function (result) {
-                  return result.graphic.layer === featureLayer;
-                })[0].graphic;
-                if (feature)
-                {
-                  this.featureInfo = feature.attributes.objectid; 
-                  this.printInfo();
-                }
-              })
-            });
-
         } else {
           if (this.mapView && this.mapView.map) {
             this.mapView.map.removeAll();
@@ -137,9 +118,17 @@ export class MapComponent implements OnInit, OnChanges {
       });
   }
 
-  printInfo() {
-    alert("From Click: " + this.featureInfo);
-    console.log("From Click " + this.featureInfo);
-  }
+    queryObject1(featureLayer) {
+        var fAttribute
+        var query = featureLayer.createQuery();
+        query.where = "objectid = 1"; //should be Minnesota or Hawaii if selected Historic Places -> Historic Areas with a year checked. 
+        query.outFields = ["*"];
+        featureLayer.queryFeatures(query).then(function (response) {
+            fAttribute = response.features;
+            console.log("Queried Name: " + fAttribute[0].attributes.state_name); //should be Minnesota or Hawaii if selected Historic Places -> Historic Areas with a year checked. 
+            this.selectedName = fAttribute[0].attributes.state_name;
+        });
+        this.infoToSend.emit(this.selectedName);
+    }
 
 }
