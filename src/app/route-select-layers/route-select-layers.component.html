@@ -43,13 +43,13 @@
       </li>
     </ul>
     <button>Submit</button>
-    
+      <br/>
+    <span>Child Data: {{inComingChildData}}</span>
   </mat-sidenav>
-
   <mat-sidenav-content class="sidenav-content">
     <button mat-raised-button *ngIf="opened" (click)="sidenav.toggle()">Close Layer Selection</button>
     <button mat-raised-button *ngIf="!opened" (click)="sidenav.toggle()">Open Layer Selection</button>
     {{selectedLayer}}
-    <app-map [featureLayerUrl]="featureLayerUrl"></app-map>
-  </mat-sidenav-content>
+    <app-map (infoToSend)="getInfoFromChild($event)" [featureLayerUrl]="featureLayerUrl"></app-map>
+   </mat-sidenav-content>
 </mat-sidenav-container>
