@@ -13,7 +13,10 @@ export class RouteSelectLayersComponent implements OnInit, OnChanges {
   featureLayerUrl: string;
   public yearNum = []; 
   public sigLevel = [];
-  private year1500Layer: string;
+    private year1500Layer: string;
+    public inComingChildData: string; 
+
+
 
   set selectedCategory(value: string) {
     this.category = value;
@@ -65,6 +68,10 @@ export class RouteSelectLayersComponent implements OnInit, OnChanges {
   // }
 
   constructor() { }
+
+    getInfoFromChild($event) {
+        this.inComingChildData = $event;
+    }
 
   ngOnInit() {
     
