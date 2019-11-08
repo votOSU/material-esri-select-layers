@@ -128,6 +128,7 @@ export class MapComponent implements OnInit, OnChanges {
             console.log("Queried Name: " + fAttribute[0].attributes.state_name); //should be Minnesota or Hawaii if selected Historic Places -> Historic Areas with a year checked. 
             this.selectedName = fAttribute[0].attributes.state_name;
         });
+        console.log("State Name: "+this.selectedName);
         this.infoToSend.emit(this.selectedName);
     }
 
