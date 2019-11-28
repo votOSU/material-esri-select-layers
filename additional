@@ -295,3 +295,289 @@ export class MapComponent implements OnInit, OnChanges {
     // }
 
 }
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>Class Break Color Render</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.13/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+		var mapview;
+		var esriRESTapi;
+		var someArray = [];
+		var tinyNum;
+		var smallNum;
+		var mediumNum;
+		var largeNum;
+		var behemothNum;
+		var rendererProperty; 
+		var fLayer; 
+
+		function getRESTinfo(esriRESTapi, FeatureLayer)
+		{
+			let serviceURL = "https://uatgis.recovery.pr/webgisdev/rest/services/TP_Financial_Branch_Dev/MapServer/3";
+			let queryOptions = {
+				responseType: "json",
+				query:{
+				  f: "json",
+				  where: "OBJECTID > 0",
+				  //where: "OBJECTID IN (7,6,32,34,16)"
+				  outFields: "*",
+				  returnGeometry: false
+				}
+			}
+			esriRESTapi(serviceURL+"/query", queryOptions).then(response =>{
+				//let someArray = [];
+				for(let i = 0; i< 5; i++)
+				{
+				  someArray.push(response.data.features[i].attributes.obligated_amt);
+				  //someArray.sort();
+				  console.log("Name: "+ response.data.features[i].attributes.region_name +" = $"+response.data.features[i].attributes.obligated_amt)
+				  //console.log("$: "+ response.data.features[i].attributes.obligated_amt )
+				}
+				someArray.sort((n1,n2) => n1-n2);
+				tinyNum = someArray[0];
+				smallNum = someArray[1];
+				mediumNum = someArray[2];
+				largeNum = someArray[3];
+				behemothNum = someArray[4];
+				for(let i =0; i< someArray.length; i++)
+				{
+					console.log(i+1+": "+someArray[i]);
+				}
+				const lightestColor = {
+					type: "simple-fill", // autocasts as new SimpleFillSymbol()
+					color: "#fffcd4",
+					style: "solid",
+					outline: {
+						width: 1,
+						color: [255, 255, 255]
+					}
+				};
+
+				const lightColor = {
+				  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				  color: "#b1cdc2",
+				  style: "solid",
+				  outline: {
+					width: 1,
+					color: [255, 255, 255]
+				  }
+				};
+
+				const mediumColor = {
+				  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				  color: "#38627a",
+				  style: "solid",
+				  outline: {
+					width: 1,
+					color: [255, 255, 255]
+				  }
+				};
+
+				const darkColor = {
+				  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				  color: "#0d2644",
+				  style: "solid",
+				  outline: {
+					width: 1,
+					color: [255, 255, 255]
+				  }
+				};
+				const darkestColor = {
+				  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+				  color: "#010812",
+				  style: "solid",
+				  outline: {
+					width: 1,
+					color: [255, 255, 255]
+				  }
+				};			
+					
+				renderer =  {
+					type: "unique-value", 
+					field: "obligated_amt",
+
+					uniqueValueInfos:[
+						{
+							value: tinyNum,
+							symbol: lightestColor
+						},
+						{
+							value: smallNum,
+							symbol: lightColor
+						},
+						{
+							value: mediumNum,
+							symbol: mediumColor
+						},
+						{
+							value: largeNum,
+							symbol: darkColor
+						},
+						{
+							value: behemothNum,
+							symbol: darkestColor
+						},
+					]
+				};
+				fLayer = new FeatureLayer({
+				  url: serviceURL,
+				  outFields: ["*"],
+				  renderer: renderer
+			   
+				});
+			});
+		}
+				
+
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Legend",
+		'esri/request'
+		], function(Map, MapView, FeatureLayer, Legend,esriRequest) {
+		esriRESTapi = esriRequest; 
+		
+		getRESTinfo(esriRESTapi, FeatureLayer);
+		//console.log("HELLO" + tinyNum);
+		//rendererProperty = uniqueRender(); 
+
+
+        const map = new Map({
+          basemap: "gray-vector",
+          //layers: [fLayer]
+        });
+		
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center:[-66.12, 18.33],
+          zoom: 8
+        });
+		view.when(function(){
+			map.add(fLayer);
+		})
+      
+      });
+	  
+	  
+
+		function uniqueRender(num1, num2, num3, num4, num5)
+		{
+			//console.log("SMALLEST #: "+num1);
+			const lightestColor = {
+			  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+			  color: "#fffcd4",
+			  style: "solid",
+			  outline: {
+				width: 1,
+				color: [255, 255, 255]
+			  }
+			};
+
+			const lightColor = {
+			  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+			  color: "#b1cdc2",
+			  style: "solid",
+			  outline: {
+				width: 1,
+				color: [255, 255, 255]
+			  }
+			};
+
+			const mediumColor = {
+			  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+			  color: "#38627a",
+			  style: "solid",
+			  outline: {
+				width: 1,
+				color: [255, 255, 255]
+			  }
+			};
+
+			const darkColor = {
+			  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+			  color: "#0d2644",
+			  style: "solid",
+			  outline: {
+				width: 1,
+				color: [255, 255, 255]
+			  }
+			};
+			const darkestColor = {
+			  type: "simple-fill", // autocasts as new SimpleFillSymbol()
+			  color: "#010812",
+			  style: "solid",
+			  outline: {
+				width: 1,
+				color: [255, 255, 255]
+			  }
+			};			
+				
+			renderer =  {
+				type: "unique-value", 
+				field: "obligated_amt",
+				defaultSymbol: {
+					type: "simple-fill", 
+					color: "black",
+					style: "cross",
+					outline: {
+						width: 0.5,
+						color: [50, 50, 50, 0.6]
+					}
+				},
+				defaultLabel: "No Data Available",
+				uniqueValueInfos:[
+					{
+						value: num1,
+						symbol: lightestColor
+					},
+					{
+						value: num2,
+						symbol: lightColor
+					},
+					{
+						value: num3,
+						symbol: mediumColor
+					},
+					{
+						value: num4,
+						symbol: darkColor
+					},
+					{
+						value: num5,
+						symbol: darkestColor
+					},
+				]
+			};			
+		}
+	  
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
