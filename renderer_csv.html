@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>JSON</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/request",
+        "esri/Graphic",
+        "esri/geometry/Point",
+        "esri/layers/FeatureLayer",
+        "esri/geometry/projection",
+        "esri/geometry/SpatialReference"
+      ], function(Map, MapView, esriRequest, Graphic,Point, FeatureLayer, projection, SpatialReference) {
+
+      projection.load()
+
+      let url ="http://localhost:5000"
+
+      let fields = [
+        {
+          name: "ObjectID",
+          alias: "ObjectID",
+          type: "oid"
+        },
+        {
+          name: "Name",
+          alias: "Name",
+          type: "string"
+        },
+        {
+          name: "FAT",
+          alias: "FAT",
+          type: "string"
+        },
+        {
+          name: "Type",
+          alias: "Type",
+          type: "string"
+        },
+        {
+          name: "DC",
+          alias: "DC",
+          type: "string"
+        },
+        {
+          name: "ID",
+          alias: "ID",
+          type: "string"
+        },
+        {
+          name: "POP",
+          alias: "POP",
+          type: "string"
+        }
+      ];
+
+      let pTemplate = {
+        title: "{title}",
+        content: [
+          {
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "Name",
+                label: "Name",
+                visible: true
+              },
+              {
+                fieldName: "FAT",
+                label: "FAT",
+                visible: true
+              },
+              {
+                fieldName: "Type",
+                label: "Type",
+                visible: true
+              },
+              {
+                fieldName: "DC",
+                label: "DC",
+                visible: true
+              },
+              {
+                fieldName: "ID",
+                label: "ID",
+                visible: true
+              },
+              {
+                fieldName: "POP",
+                label: "POP",
+                visible: true,
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      let dataRenderer = {
+          type: "simple",
+          symbol : {
+                type: "simple-marker",
+                color: "blue",
+                size: 3,
+                outline: { // autocasts as new SimpleLineSymbol()
+                    width: 0.5,
+                    color: [0, 0, 0, 0.2]
+                }
+            },
+        }
+
+
+      let map = new Map({
+        basemap: "satellite",
+      });
+
+      let view = new MapView({
+          container: "viewDiv",
+          center: [67.068037, 24.872328],
+          zoom: 12,
+          map: map
+        });
+
+       let options = {
+        query: {
+          f: "json"
+        },
+        responseType: "json"
+      };
+
+    let fetchData = () => esriRequest(url, options).then(response => response.data)
+
+    let webservice = res => {
+
+           let graphicsArray =  res.map(function(result)
+		   {
+
+				 let resultPnts = result.SHAPE.points.map(function(point){
+
+				 return new Point({
+					x:point.x,
+					y:point.y,
+					spatialReference : result.SHAPE.srid
+				  });
+				 
+				})
+
+				  let atts = {
+					"ObjectID": result.OBJECTID,
+					"Splitter": result.Splitter,
+					"Comment": result.Comment,
+					"Name": result.Name,
+					"ID": result.ID,
+					"Placement": result.Placement,
+					"POP": result.POP
+				  };
+
+				  let graArr = resultPnts.map(function(pnt){
+
+				  let projectedPoint = projection.project(pnt,view.spatialReference);
+
+				   let markerSymbol = {
+						type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+						color: [226, 119, 40]
+					  };
+
+					return new Graphic({
+					  geometry:projectedPoint,
+					  symbol: markerSymbol,
+					  attributes: atts
+					})
+					//console.log(graphic)
+				 
+				  
+				  })
+				  return graArr
+			})
+			console.log(graphicsArray)
+
+			let layer = new FeatureLayer({
+				url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/3",
+				geometryType: "point",
+				source: [graphicsArray],
+				fields: fields,
+				objectIdField: "ObjectID",
+				renderer: dataRenderer,
+				popupTemplate: pTemplate
+			});
+			map.add(layer)
+
+    }
+
+    view.when(() =>{
+      fetchData()
+      .then(webservice)
+    })
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
