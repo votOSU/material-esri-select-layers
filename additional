@@ -581,3 +581,220 @@ export class MapComponent implements OnInit, OnChanges {
     <div id="viewDiv"></div>
   </body>
 </html>
+
+
+
+
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { loadModules } from 'esri-loader';
+import esri = __esri;
+
+@Component({
+  selector: 'app-map',
+  templateUrl: './map.component.html',
+  styleUrls: ['./map.component.scss']
+})
+
+export class MapComponent implements OnInit, OnChanges {
+
+    public featureInfo: string;
+    public selectedName: string;
+    public testingInfo: string;
+    public tinyNum: number;
+    public smallNum: number;
+    public mediumNum: number;
+    public largeNum: number;
+    public behemothNum: number;
+
+    @Output() public infoToSend = new EventEmitter<number>(); 
+    @Output() public infoToSend2 = new EventEmitter<number>(); 
+    @Output() public infoToSend3 = new EventEmitter<number>(); 
+    @Output() public infoToSend4 = new EventEmitter<number>(); 
+    @Output() public infoToSend5 = new EventEmitter<number>(); 
+
+  esriLoaderOptions: object = {};
+  mapView: esri.MapView;
+  mapViewProperties: esri.MapViewProperties;
+  webMap: esri.WebMap;
+  
+  webMapPortalId = '8dda0e7b5e2d4fafa80132d59122268c';
+  webMapProperties: esri.WebMapProperties;
+
+  @Input()
+  featureLayerUrl: string;
+
+  @Output()
+  mapLoaded = new EventEmitter<boolean>();
+
+  @ViewChild('mapViewNode', { static: false })
+  private mapViewNodeElementRef: ElementRef;
+
+  constructor() {
+    this.esriLoaderOptions = {
+      url: 'https://js.arcgis.com/4.12/',
+      css: true
+    };
+    loadModules([
+      'esri/WebMap',
+      'esri/geometry/SpatialReference',
+    ], this.esriLoaderOptions)
+      .then(([
+        WebMap
+      ]) => {
+        this.webMapProperties = {
+            basemap: "gray-vector"
+        };
+        this.webMap = new WebMap(this.webMapProperties);
+      });
+  }
+
+  ngOnInit() {
+    this.createMapView();
+  }
+
+  ngOnChanges() {
+    this.changeMapLayer();
+  }
+
+  createMapView() {
+    loadModules([
+      'esri/views/MapView'
+    ], this.esriLoaderOptions)
+      .then(([
+        MapView
+      ]) => {
+        this.mapViewProperties = {
+          container: this.mapViewNodeElementRef.nativeElement,
+          center: [-98.34, 40.28],
+          zoom: 4,
+          map: this.webMap
+        };
+        this.mapView = new MapView(this.mapViewProperties);
+        this.mapView.when(() => {
+          // All the resources in the MapView and the map have loaded. Now execute additional processes
+          this.mapLoaded.emit(true);
+        }, err => {
+          console.error(err);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  changeMapLayer()
+  {
+    loadModules([
+      'esri/layers/FeatureLayer',
+      'esri/request'
+    ], this.esriLoaderOptions)
+      .then(([
+        FeatureLayer, esriRequest
+      ]) => {
+        if (this.featureLayerUrl)
+        {
+          
+          const featureLayer = new FeatureLayer({
+            url: this.featureLayerUrl,
+            outFields: ["*"],
+            //renderer: renderer
+          });
+          let queryOptions = {
+            responseType: "json",
+            query:{
+              f: "json",
+              where: "objectid IN (7,6,32,34,16)",
+              outFields: "*",
+              returnGeometry: false
+            }
+          }
+          esriRequest(this.featureLayerUrl+"/query", queryOptions).then(response =>{
+            //this.selectedName = response.data.features[0].attributes.state_name
+            //console.log(response.data);
+            //this.infoToSend.emit(this.selectedName);
+            //console.log("Name: "+this.selectedName);
+            //let someArray :number [];
+            let someArray: Array<number> = [];
+            for(let i = 0; i< 5; i++)
+            {
+              someArray.push(response.data.features[i].attributes.pop2000);
+              console.log(response.data.features[i].attributes.state_name +" Pop: "+response.data.features[i].attributes.pop2000);
+              //someArray.sort();
+              //console.log("Name: "+ response.data.features[i].attributes.region_name +" = $"+response.data.features[i].attributes.obligated_amt)
+              //console.log("$: "+ response.data.features[i].attributes.obligated_amt )
+            }
+            someArray.sort((n1,n2) => n1-n2);
+            this.tinyNum = someArray[0];
+            this.smallNum = someArray[1];
+            this.mediumNum = someArray[2];
+            this.largeNum = someArray[3];
+            this.behemothNum = someArray[4];
+            this.infoToSend.emit(someArray[0]);
+            this.infoToSend2.emit(someArray[1]);
+            this.infoToSend3.emit(someArray[2]);
+            this.infoToSend4.emit(someArray[3]);
+            this.infoToSend5.emit(someArray[4]);
+            for(let i = 0; i< someArray.length; i++)
+            {
+              console.log("$: "+ someArray[i] )
+              //this.infoToSend.emit(someArray[i])
+            }
+            //console.log("Name: "+ response.data.features[0].attributes.region_name )
+            //console.log("Name: "+ response.data.features[1].attributes.region_name )
+            //console.log("Name: "+ response.data.features[2].attributes.region_name )
+            //console.log("Name: "+ response.data.features[3].attributes.region_name )
+            //console.log("Name: "+ response.data.features[4].attributes.region_name )
+          })
+
+          //this.mapView.map.basemap.baseLayers.forEach((baseLayer) => {
+            //baseLayer.visible = false;
+          //})
+            this.mapView.map.removeAll();
+            this.mapView.map.add(featureLayer);
+
+            this.mapView.on("layerview-create", function(event){
+              //this.queryObject1(featureLayer);
+            });
+            
+        } else {
+          if (this.mapView && this.mapView.map) {
+            this.mapView.map.removeAll();
+          }
+        }
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+    queryObject1(featureLayer) {
+        var fAttribute
+        var query = featureLayer.createQuery();
+        query.where = "objectid = 1"; //should be Minnesota or Hawaii if selected Historic Places -> Historic Areas with a year checked. 
+        query.outFields = ["*"];
+        featureLayer.queryFeatures(query).then(function (response) {
+            fAttribute = response.features;
+            console.log("Queried Name: " + fAttribute[0].attributes.state_name); //should be Minnesota or Hawaii if selected Historic Places -> Historic Areas with a year checked. 
+            this.selectedName = fAttribute[0].attributes.state_name;
+        });
+        console.log("State Name: "+this.selectedName);
+        //this.infoToSend.emit(this.selectedName);
+    }
+
+    
+    // queryObject1(QueryTask, Query) {
+    //   let queryTask = new QueryTask({
+    //     url: this.featureLayerUrl
+    //   });
+    //   let query = new Query();
+    //   query.returnGeometry = false;
+    //   query.outFields = ["*"];
+    //   query.where = "objectid = 1";
+    //   queryTask.execute(query).then(response =>{
+    //     console.log(response);
+    //     //console.log("Name: "+response.features[0].attributes.state_name); 
+    //   });
+
+    // }
+
+}
